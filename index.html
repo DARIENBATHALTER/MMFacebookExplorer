@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Facebook Posts Analytics Browser</title>
+    <title>MM Facebook Archive Explorer</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -16,16 +18,16 @@
         :root {
             --primary-color: #1a1a1a;
             --secondary-color: #f8f9fa;
-            --accent-color: #1877f2;
-            --accent-hover: #166fe5;
+            --accent-color: #1e61bd;
+            --accent-hover: #1851a3;
             --text-primary: #1a1a1a;
             --text-secondary: #6c757d;
             --border-color: #e9ecef;
             --shadow-light: 0 2px 12px rgba(0, 0, 0, 0.04);
             --shadow-medium: 0 4px 24px rgba(0, 0, 0, 0.08);
             --shadow-heavy: 0 8px 40px rgba(0, 0, 0, 0.12);
-            --gradient-primary: linear-gradient(135deg, #1877f2 0%, #42a5f5 100%);
-            --gradient-secondary: linear-gradient(135deg, #1877f2 0%, #64b5f6 100%);
+            --gradient-primary: linear-gradient(135deg, #1e61bd 0%, #2e7dd1 100%);
+            --gradient-secondary: linear-gradient(135deg, #1e61bd 0%, #3e8ae5 100%);
             --titlebar-bg: #353a3f;
             --titlebar-text: #e4e6ea;
         }
@@ -126,7 +128,7 @@
             outline: none;
             border-color: var(--accent-color);
             background: rgba(255, 255, 255, 0.15);
-            box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.2);
+            box-shadow: 0 0 0 2px rgba(30, 97, 189, 0.2);
         }
 
         .titlebar-search i {
@@ -209,15 +211,16 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--border-color);
+            margin: -2rem -2rem 1.5rem -2rem;
+            padding: 1.5rem 2rem;
+            background: var(--gradient-primary);
+            border-radius: 16px 16px 0 0;
         }
 
         .modal-title {
             font-size: 1.5rem;
             font-weight: 600;
-            color: var(--text-primary);
+            color: white;
             margin: 0;
         }
 
@@ -226,7 +229,7 @@
             height: 32px;
             border: none;
             background: none;
-            color: var(--text-secondary);
+            color: white;
             cursor: pointer;
             border-radius: 50%;
             display: flex;
@@ -237,8 +240,8 @@
         }
 
         .modal-close:hover {
-            background: var(--secondary-color);
-            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
         }
 
         .modal-body {
@@ -392,15 +395,15 @@
         }
 
         .titlebar-icon {
-            width: 32px;
-            height: 32px;
+            width: 36px;
+            height: 36px;
             background: var(--gradient-primary);
             border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 16px;
+            font-size: 20px;
         }
 
         .titlebar h1 {
@@ -408,6 +411,11 @@
             font-weight: 600;
             color: var(--titlebar-text);
             margin: 0;
+            transition: color 0.3s ease;
+        }
+
+        .titlebar h1:hover {
+            color: var(--accent-color);
         }
 
         .container {
@@ -725,6 +733,152 @@
             color: var(--text-secondary);
         }
 
+        .comment-replies {
+            margin-left: 1.5rem;
+            border-left: 2px solid var(--border-color);
+            padding-left: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .comment.reply {
+            padding: 0.5rem 0;
+        }
+
+        .comment.reply .comment-avatar {
+            width: 24px;
+            height: 24px;
+            font-size: 0.6rem;
+        }
+
+        .comment.reply .comment-content {
+            margin-left: 1.5rem;
+            font-size: 0.75rem;
+        }
+
+        .comment.reply .comment-stats {
+            margin-left: 1.5rem;
+            font-size: 0.65rem;
+        }
+
+        .export-comment-btn {
+            margin-left: 0.5rem;
+            padding: 0.2rem 0.4rem;
+            background: none;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.7rem;
+            transition: all 0.3s ease;
+        }
+
+        .export-comment-btn:hover {
+            background: var(--secondary-color);
+            color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        .screenshot-render-area {
+            position: fixed;
+            left: -9999px;
+            top: -9999px;
+            width: auto;
+            height: auto;
+            z-index: -1;
+            background: white;
+        }
+
+        .facebook-comment-export {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: white;
+            padding: 16px;
+            width: 500px;
+            min-height: 100px;
+        }
+
+        .facebook-comment-wrapper {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .facebook-comment-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .facebook-comment-card {
+            background: #f0f2f5;
+            border-radius: 16px;
+            padding: 8px 12px;
+            flex: 1;
+            position: relative;
+        }
+
+        .facebook-comment-author {
+            font-weight: 600;
+            font-size: 13px;
+            color: #050505;
+            margin-bottom: 2px;
+        }
+
+        .facebook-comment-text {
+            font-size: 14px;
+            line-height: 1.33;
+            color: #050505;
+            margin-bottom: 8px;
+            word-wrap: break-word;
+        }
+
+        .facebook-comment-attachments {
+            margin-top: 8px;
+        }
+
+        .facebook-comment-attachments img {
+            max-width: 100%;
+            border-radius: 8px;
+            display: block;
+        }
+
+        .facebook-comment-footer {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 8px;
+            margin-left: 40px;
+        }
+
+        .facebook-comment-action {
+            color: #65676b;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0;
+            background: none;
+            border: none;
+        }
+
+        .facebook-comment-action.send-message {
+            color: #1877f2;
+        }
+
+        .facebook-comment-action:hover {
+            text-decoration: underline;
+        }
+
+        .facebook-comment-time {
+            color: #65676b;
+            font-size: 12px;
+        }
+
         .loading {
             text-align: center;
             padding: 4rem 2rem;
@@ -823,7 +977,7 @@
                 <div class="titlebar-icon">
                     <i class="fab fa-facebook-f"></i>
                 </div>
-                <h1>Facebook Archive Explorer</h1>
+                <h1>MM Facebook Archive Explorer</h1>
             </div>
             <div class="titlebar-center">
                 <div class="titlebar-search">
@@ -881,6 +1035,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Screenshot render area for exporting comments -->
+    <div class="screenshot-render-area" id="screenshotRenderArea"></div>
 
     <div class="container">
 
@@ -1136,6 +1293,7 @@
                     post.content.substring(0, 300) + '...' : post.content;
 
                 const attachments = this.getAttachments(post);
+                const medicalMediumLink = this.extractMedicalMediumLink(post.content);
                 const topComments = post.comments
                     .sort((a, b) => b.reactionsCount - a.reactionsCount)
                     .slice(0, 5);
@@ -1150,12 +1308,14 @@
                             </div>
                         </div>
                         <div class="post-content">
-                            <div class="post-text">${this.formatText(truncatedContent)}</div>
+                            <div class="post-text">${this.formatText(truncatedContent, attachments.length > 0)}</div>
                             ${attachments.length > 0 ? `
                                 <div class="post-attachments">
                                     ${attachments.map(att => `
                                         <div class="attachment">
-                                            <img src="${att}" alt="Post attachment" loading="lazy">
+                                            ${medicalMediumLink ? `<a href="${medicalMediumLink}" target="_blank" rel="noopener">` : ''}
+                                            <img src="${att}" alt="Post attachment" loading="lazy" ${medicalMediumLink ? 'style="cursor: pointer;"' : ''}>
+                                            ${medicalMediumLink ? '</a>' : ''}
                                         </div>
                                     `).join('')}
                                 </div>
@@ -1178,7 +1338,7 @@
                         ${post.comments.length > 0 ? `
                             <div class="comments-section">
                                 <button class="see-all-button" onclick="window.facebookAnalytics.openSinglePost('${post.post_id}')">
-                                    <i class="fas fa-comment"></i> See Comments (${post.comments.length})
+                                    <i class="fas fa-comment"></i> See full post and comments (${post.comments.length})
                                 </button>
                             </div>
                         ` : ''}
@@ -1186,7 +1346,7 @@
                 `;
             }
 
-            renderComment(comment, postDirectory) {
+            renderComment(comment, postDirectory, isReply = false) {
                 const date = new Date(comment.createdAt * 1000);
                 const formattedDate = date.toLocaleDateString('en-US', {
                     month: 'short',
@@ -1202,8 +1362,15 @@
                 const avatarColor = this.generateAvatarColor(comment.author.name);
                 const initials = this.getUserInitials(comment.author.name);
 
+                // Render child comments if they exist
+                const childComments = comment.children && comment.children.length > 0 ? 
+                    comment.children.map(child => this.renderComment(child, postDirectory, true)).join('') : '';
+
+                const missingReplies = comment.subCommentsCount > comment.children?.length;
+                const missingCount = comment.subCommentsCount - (comment.children?.length || 0);
+
                 return `
-                    <div class="comment">
+                    <div class="comment ${isReply ? 'reply' : ''}">
                         <div class="comment-header">
                             <div class="comment-avatar generated" style="background-color: ${avatarColor};">
                                 ${initials}
@@ -1215,7 +1382,7 @@
                         </div>
                         <div class="comment-content">${this.formatText(comment.content)}</div>
                         ${commentAttachments.length > 0 ? `
-                            <div class="comment-attachments" style="margin-left: 2rem; margin-top: 0.5rem;">
+                            <div class="comment-attachments" style="margin-left: ${isReply ? '1.5rem' : '2rem'}; margin-top: 0.5rem;">
                                 <div class="post-attachments">
                                     ${commentAttachments.map(att => `
                                         <div class="attachment">
@@ -1227,8 +1394,21 @@
                         ` : ''}
                         <div class="comment-stats">
                             <span><i class="fas fa-heart"></i> ${comment.reactionsCount}</span>
-                            ${comment.subCommentsCount > 0 ? `<span><i class="fas fa-reply"></i> ${comment.subCommentsCount}</span>` : ''}
+                            ${comment.subCommentsCount > 0 ? `<span><i class="fas fa-reply"></i> ${comment.subCommentsCount} ${comment.subCommentsCount === 1 ? 'reply' : 'replies'}</span>` : ''}
+                            <button class="export-comment-btn" onclick="window.facebookAnalytics.exportComment('${comment.id}', '${postDirectory}')">
+                                <i class="fas fa-download"></i> Export
+                            </button>
                         </div>
+                        ${childComments ? `
+                            <div class="comment-replies">
+                                ${childComments}
+                                ${missingReplies ? `
+                                    <div style="padding: 0.5rem 0; color: var(--text-secondary); font-size: 0.75rem; font-style: italic;">
+                                        ${missingCount} more ${missingCount === 1 ? 'reply' : 'replies'} not shown...
+                                    </div>
+                                ` : ''}
+                            </div>
+                        ` : ''}
                     </div>
                 `;
             }
@@ -1260,10 +1440,26 @@
                 return attachments;
             }
 
-            formatText(text) {
-                return text
+            formatText(text, hasAttachments = false) {
+                let formattedText = text;
+                
+                if (hasAttachments) {
+                    // Remove Facebook photo URLs when we have images
+                    formattedText = formattedText.replace(/\s*with a Photo: https:\/\/www\.facebook\.com\/photo\/\?[^\s]*$/g, '');
+                    formattedText = formattedText.replace(/\s*Photo: https:\/\/www\.facebook\.com\/photo\/\?[^\s]*$/g, '');
+                    
+                    // Remove trailing URLs that are likely related to the image content (but keep Medical Medium links)
+                    formattedText = formattedText.replace(/\s*https:\/\/geni\.us\/[^\s]*$/g, '');
+                }
+                
+                return formattedText
                     .replace(/\n/g, '<br>')
                     .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+            }
+
+            extractMedicalMediumLink(text) {
+                const match = text.match(/(https:\/\/www\.medicalmedium\.com[^\s]*)/);
+                return match ? match[1] : null;
             }
 
             generateAvatarColor(name) {
@@ -1347,10 +1543,8 @@
                     minute: '2-digit'
                 });
 
-                const truncatedContent = post.content.length > 300 ? 
-                    post.content.substring(0, 300) + '...' : post.content;
-
                 const attachments = this.getAttachments(post);
+                const medicalMediumLink = this.extractMedicalMediumLink(post.content);
                 const allComments = post.comments.sort((a, b) => new Date(a.createdAt * 1000) - new Date(b.createdAt * 1000));
 
                 return `
@@ -1363,12 +1557,14 @@
                             </div>
                         </div>
                         <div class="post-content">
-                            <div class="post-text">${this.formatText(post.content)}</div>
+                            <div class="post-text">${this.formatText(post.content, attachments.length > 0)}</div>
                             ${attachments.length > 0 ? `
                                 <div class="post-attachments">
                                     ${attachments.map(att => `
                                         <div class="attachment">
-                                            <img src="${att}" alt="Post attachment" loading="lazy">
+                                            ${medicalMediumLink ? `<a href="${medicalMediumLink}" target="_blank" rel="noopener">` : ''}
+                                            <img src="${att}" alt="Post attachment" loading="lazy" ${medicalMediumLink ? 'style="cursor: pointer;"' : ''}>
+                                            ${medicalMediumLink ? '</a>' : ''}
                                         </div>
                                     `).join('')}
                                 </div>
@@ -1397,6 +1593,161 @@
                         ` : ''}
                     </div>
                 `;
+            }
+
+            async exportComment(commentId, postDirectory) {
+                try {
+                    // Find the comment in all posts
+                    let targetComment = null;
+                    let targetPost = null;
+                    
+                    for (const post of this.posts) {
+                        const comment = this.findCommentById(post.comments, commentId);
+                        if (comment) {
+                            targetComment = comment;
+                            targetPost = post;
+                            break;
+                        }
+                    }
+                    
+                    if (!targetComment) {
+                        alert('Comment not found for export');
+                        return;
+                    }
+                    
+                    // Generate the Facebook-style comment
+                    const screenshotRenderArea = document.getElementById('screenshotRenderArea');
+                    screenshotRenderArea.innerHTML = '';
+                    
+                    const exportDiv = this.createFacebookCommentExport(targetComment, postDirectory);
+                    screenshotRenderArea.appendChild(exportDiv);
+                    
+                    // Wait for images to load
+                    const images = exportDiv.getElementsByTagName('img');
+                    const promises = [];
+                    for (let img of images) {
+                        if (!img.complete) {
+                            promises.push(new Promise(resolve => { 
+                                img.onload = resolve; 
+                                img.onerror = resolve; 
+                            }));
+                        }
+                    }
+                    await Promise.all(promises);
+                    
+                    // Short delay for rendering
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                    
+                    // Temporarily make visible for screenshot
+                    screenshotRenderArea.style.left = '0px';
+                    screenshotRenderArea.style.top = '0px';
+                    screenshotRenderArea.style.opacity = '0.01';
+                    screenshotRenderArea.style.zIndex = '-1';
+                    
+                    // Take screenshot
+                    const canvas = await html2canvas(exportDiv, {
+                        useCORS: true,
+                        allowTaint: true,
+                        backgroundColor: null,
+                        scale: 2,
+                        logging: false
+                    });
+                    
+                    // Create download link
+                    const imageURL = canvas.toDataURL('image/png');
+                    const sanitizedAuthor = targetComment.author.name.replace(/[^a-zA-Z0-9_]/g, '') || 'UnknownAuthor';
+                    const firstThreeWords = targetComment.content.split(' ').slice(0, 3).join('_') || 'comment';
+                    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+                    
+                    const downloadLink = document.createElement('a');
+                    downloadLink.download = `facebook_comment_${sanitizedAuthor}_${firstThreeWords}_${timestamp}.png`;
+                    downloadLink.href = imageURL;
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                    
+                } catch (error) {
+                    console.error('Error exporting comment:', error);
+                    alert('Failed to export comment. Please try again.');
+                } finally {
+                    // Reset render area
+                    const screenshotRenderArea = document.getElementById('screenshotRenderArea');
+                    screenshotRenderArea.innerHTML = '';
+                    screenshotRenderArea.style.left = '-9999px';
+                    screenshotRenderArea.style.top = '-9999px';
+                    screenshotRenderArea.style.opacity = '1';
+                    screenshotRenderArea.style.zIndex = 'auto';
+                }
+            }
+
+            findCommentById(comments, commentId) {
+                for (const comment of comments) {
+                    if (comment.id === commentId) {
+                        return comment;
+                    }
+                    if (comment.children && comment.children.length > 0) {
+                        const found = this.findCommentById(comment.children, commentId);
+                        if (found) return found;
+                    }
+                }
+                return null;
+            }
+
+            createFacebookCommentExport(comment, postDirectory) {
+                const avatarColor = this.generateAvatarColor(comment.author.name);
+                const initials = this.getUserInitials(comment.author.name);
+                const commentAttachments = this.getCommentAttachments(comment, postDirectory);
+                
+                const date = new Date(comment.createdAt * 1000);
+                const timeAgo = this.getTimeAgo(date);
+                
+                const exportDiv = document.createElement('div');
+                exportDiv.className = 'facebook-comment-export';
+                
+                exportDiv.innerHTML = `
+                    <div class="facebook-comment-wrapper">
+                        <div class="facebook-comment-avatar" style="background-color: ${avatarColor};">
+                            ${initials}
+                        </div>
+                        <div class="facebook-comment-card">
+                            <div class="facebook-comment-author">${comment.author.name}</div>
+                            <div class="facebook-comment-text">${comment.content}</div>
+                            ${commentAttachments.length > 0 ? `
+                                <div class="facebook-comment-attachments">
+                                    ${commentAttachments.map(att => `
+                                        <img src="${att}" alt="Comment attachment">
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    <div class="facebook-comment-footer">
+                        <button class="facebook-comment-action">Like</button>
+                        <button class="facebook-comment-action">Reply</button>
+                        <button class="facebook-comment-action">Hide</button>
+                        <button class="facebook-comment-action send-message">Send Message</button>
+                        <span class="facebook-comment-time">${timeAgo}</span>
+                    </div>
+                `;
+                
+                return exportDiv;
+            }
+
+            getTimeAgo(date) {
+                const now = new Date();
+                const diffInMinutes = Math.floor((now - date) / (1000 * 60));
+                
+                if (diffInMinutes < 1) return 'now';
+                if (diffInMinutes < 60) return `${diffInMinutes}m`;
+                
+                const diffInHours = Math.floor(diffInMinutes / 60);
+                if (diffInHours < 24) return `${diffInHours}h`;
+                
+                const diffInDays = Math.floor(diffInHours / 24);
+                if (diffInDays < 7) return `${diffInDays}d`;
+                
+                const diffInWeeks = Math.floor(diffInDays / 7);
+                return `${diffInWeeks}w`;
             }
         }
 
