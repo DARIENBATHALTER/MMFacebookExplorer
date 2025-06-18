@@ -1,0 +1,1477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facebook Posts Analytics Browser</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #1a1a1a;
+            --secondary-color: #f8f9fa;
+            --accent-color: #1877f2;
+            --accent-hover: #166fe5;
+            --text-primary: #1a1a1a;
+            --text-secondary: #6c757d;
+            --border-color: #e9ecef;
+            --shadow-light: 0 2px 12px rgba(0, 0, 0, 0.04);
+            --shadow-medium: 0 4px 24px rgba(0, 0, 0, 0.08);
+            --shadow-heavy: 0 8px 40px rgba(0, 0, 0, 0.12);
+            --gradient-primary: linear-gradient(135deg, #1877f2 0%, #42a5f5 100%);
+            --gradient-secondary: linear-gradient(135deg, #1877f2 0%, #64b5f6 100%);
+            --titlebar-bg: #353a3f;
+            --titlebar-text: #e4e6ea;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            line-height: 1.6;
+            color: var(--text-primary);
+            margin: 0;
+            padding-top: 75px;
+        }
+
+        .titlebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 75px;
+            background: var(--titlebar-bg);
+            border-bottom: 1px solid #4a4b4c;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 1000;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .titlebar-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .titlebar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .titlebar-center {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            max-width: 800px;
+            margin: 0 2rem;
+        }
+
+        .help-button {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--titlebar-text);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .help-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .titlebar-search {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+
+        .titlebar-search input {
+            width: 100%;
+            padding: 0.5rem 0.75rem 0.5rem 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--titlebar-text);
+            transition: all 0.3s ease;
+        }
+
+        .titlebar-search input::placeholder {
+            color: rgba(228, 230, 234, 0.7);
+        }
+
+        .titlebar-search input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.2);
+        }
+
+        .titlebar-search i {
+            position: absolute;
+            left: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(228, 230, 234, 0.7);
+            font-size: 0.8rem;
+        }
+
+        .titlebar-filters {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .titlebar-filter-btn {
+            padding: 0.4rem 0.8rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--titlebar-text);
+            white-space: nowrap;
+        }
+
+        .titlebar-filter-btn:hover, .titlebar-filter-btn.active {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-heavy);
+            position: relative;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--secondary-color);
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            line-height: 1.6;
+        }
+
+        .modal-body h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 1.5rem 0 0.5rem 0;
+            color: var(--text-primary);
+        }
+
+        .modal-body h3:first-child {
+            margin-top: 0;
+        }
+
+        .modal-body p {
+            margin: 0.5rem 0;
+            color: var(--text-primary);
+        }
+
+        .modal-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .modal-body a:hover {
+            text-decoration: underline;
+        }
+
+        .copyright {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .made-with {
+            font-style: italic;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
+
+        .see-all-button {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--secondary-color);
+            border: 1px solid var(--border-color);
+            border-radius: 0 0 8px 8px;
+            border-top: none;
+            color: var(--accent-color);
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .see-all-button:hover {
+            background: #e9ecef;
+            color: var(--accent-hover);
+        }
+
+        .single-post-view {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1500;
+            backdrop-filter: blur(4px);
+        }
+
+        .single-post-view.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .single-post-container {
+            background: white;
+            border-radius: 16px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-heavy);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        .single-post-header {
+            position: sticky;
+            top: 0;
+            background: var(--secondary-color);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 16px 16px 0 0;
+        }
+
+        .single-post-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .single-post-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .single-post-close:hover {
+            background: rgba(0, 0, 0, 0.1);
+            color: var(--text-primary);
+        }
+
+        .single-post-content {
+            padding: 0;
+        }
+
+        .single-post-content .post-card {
+            border: none;
+            border-radius: 0;
+            box-shadow: none;
+            margin: 0;
+        }
+
+        .single-post-content .comments-list {
+            display: block !important;
+            max-height: none;
+        }
+
+        .single-post-content .comments-header {
+            display: none;
+        }
+
+        .titlebar-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--gradient-primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+        }
+
+        .titlebar h1 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--titlebar-text);
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .controls {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-light);
+            border: 1px solid var(--border-color);
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: var(--secondary-color);
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        .filters {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--border-color);
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-light);
+            border: 1px solid var(--border-color);
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .stat-card .icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-card .value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-card .label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .posts-container {
+            column-count: auto;
+            column-width: 400px;
+            column-gap: 1.5rem;
+            max-width: 100%;
+        }
+
+        .post-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow-light);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            break-inside: avoid;
+            margin-bottom: 1.5rem;
+            width: 100%;
+            display: inline-block;
+        }
+
+        .post-card:hover {
+            box-shadow: var(--shadow-medium);
+            transform: translateY(-2px);
+        }
+
+        .post-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .post-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 1rem;
+            overflow: hidden;
+        }
+
+        .post-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .post-meta {
+            flex: 1;
+        }
+
+        .post-author {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .post-date {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        .post-content {
+            padding: 1rem;
+        }
+
+        .post-text {
+            line-height: 1.5;
+            margin-bottom: 0.75rem;
+            font-size: 0.9rem;
+        }
+
+        .post-attachments {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 0.5rem;
+            margin: 0.75rem 0;
+        }
+
+        .attachment {
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .attachment img {
+            width: 100%;
+            height: auto;
+            display: block;
+            max-height: 300px;
+            object-fit: contain;
+        }
+
+        .post-stats {
+            display: flex;
+            gap: 1.5rem;
+            padding: 0.75rem 1rem;
+            background: var(--secondary-color);
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stat-item i {
+            color: var(--accent-color);
+        }
+
+        .comments-section {
+            border-top: 1px solid var(--border-color);
+        }
+
+        .comments-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .comment {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .comment:last-child {
+            border-bottom: none;
+        }
+
+        .comment-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .comment-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.7rem;
+            overflow: hidden;
+        }
+
+        .comment-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .comment-avatar.generated {
+            color: white;
+            font-weight: 600;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .comment-meta {
+            flex: 1;
+        }
+
+        .comment-author {
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        .comment-date {
+            color: var(--text-secondary);
+            font-size: 0.7rem;
+        }
+
+        .comment-content {
+            margin-left: 2rem;
+            line-height: 1.4;
+            font-size: 0.8rem;
+        }
+
+        .comment-stats {
+            margin-left: 2rem;
+            margin-top: 0.5rem;
+            display: flex;
+            gap: 1rem;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .loading i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .no-data i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .titlebar {
+                padding: 0 16px;
+            }
+
+            .titlebar h1 {
+                font-size: 1.2rem;
+            }
+
+            .titlebar-center {
+                margin: 0 1rem;
+                max-width: none;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+
+            .titlebar-search {
+                min-width: 200px;
+                order: 1;
+                flex: 1 1 100%;
+            }
+
+            .titlebar-filters {
+                order: 2;
+                flex: 1 1 100%;
+                justify-content: center;
+                margin-top: 0.5rem;
+            }
+
+            .titlebar-filter-btn {
+                font-size: 0.7rem;
+                padding: 0.3rem 0.6rem;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box {
+                min-width: auto;
+            }
+
+            .filters {
+                justify-content: center;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .posts-container {
+                column-count: 1;
+                column-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="titlebar">
+        <div class="titlebar-content">
+            <div class="titlebar-left" id="homeButton">
+                <div class="titlebar-icon">
+                    <i class="fab fa-facebook-f"></i>
+                </div>
+                <h1>Facebook Archive Explorer</h1>
+            </div>
+            <div class="titlebar-center">
+                <div class="titlebar-search">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="titlebarSearchInput" placeholder="Search posts by content, author, or keywords...">
+                </div>
+                <div class="titlebar-filters">
+                    <button class="titlebar-filter-btn active" data-filter="all">All</button>
+                    <button class="titlebar-filter-btn" data-filter="high-engagement">High Engagement</button>
+                    <button class="titlebar-filter-btn" data-filter="recent">Recent</button>
+                    <button class="titlebar-filter-btn" data-filter="popular">Popular</button>
+                </div>
+            </div>
+            <button class="help-button" id="helpButton">
+                <i class="fas fa-question"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div class="modal" id="helpModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Facebook Archive Explorer</h2>
+                <button class="modal-close" id="closeModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <h3>Facebook Archive Explorer</h3>
+                <p class="copyright">© 2025 Darien Bathalter</p>
+                <p>For bespoke data visualization tools...</p>
+                <p><a href="https://quiettools.dev" target="_blank">https://quiettools.dev</a></p>
+                
+                <h3>Contact information:</h3>
+                <p>Email: <a href="mailto:hello@quiettools.dev">hello@quiettools.dev</a></p>
+                <p>Text / Voicemail: <a href="tel:+19045726183">(904) 572-6183</a></p>
+                
+                <p class="made-with">Made with Ode 🌿</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Single Post View Modal -->
+    <div class="single-post-view" id="singlePostView">
+        <div class="single-post-container">
+            <div class="single-post-header">
+                <h3 class="single-post-title">Post Details</h3>
+                <button class="single-post-close" id="closeSinglePost">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="single-post-content" id="singlePostContent">
+                <!-- Single post content will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="icon"><i class="fas fa-file-alt"></i></div>
+                <div class="value" id="totalPosts">-</div>
+                <div class="label">Total Posts</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon"><i class="fas fa-comments"></i></div>
+                <div class="value" id="totalComments">-</div>
+                <div class="label">Total Comments</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon"><i class="fas fa-heart"></i></div>
+                <div class="value" id="totalReactions">-</div>
+                <div class="label">Total Reactions</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon"><i class="fas fa-share"></i></div>
+                <div class="value" id="totalShares">-</div>
+                <div class="label">Total Shares</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon"><i class="fas fa-chart-bar"></i></div>
+                <div class="value" id="avgEngagement">-</div>
+                <div class="label">Avg Engagement</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon"><i class="fas fa-users"></i></div>
+                <div class="value" id="uniqueCommenters">-</div>
+                <div class="label">Unique Commenters</div>
+            </div>
+        </div>
+
+        <div class="posts-container" id="postsContainer">
+            <div class="loading">
+                <i class="fas fa-spinner"></i>
+                <p>Loading Facebook posts data...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class FacebookAnalytics {
+            constructor() {
+                this.posts = [];
+                this.filteredPosts = [];
+                this.currentFilter = 'all';
+                this.searchTerm = '';
+                this.init();
+            }
+
+            async init() {
+                await this.loadData();
+                this.setupEventListeners();
+                this.renderStats();
+                this.renderPosts();
+            }
+
+            async loadData() {
+                try {
+                    // Load the manifest file that contains list of all post directories
+                    const manifestResponse = await fetch('posts-manifest.json');
+                    if (!manifestResponse.ok) {
+                        throw new Error('Manifest file not found. Please run: node data-loader.js');
+                    }
+                    
+                    const manifest = await manifestResponse.json();
+                    const directories = manifest.directories;
+                    
+                    console.log(`📊 Loading ${directories.length} posts...`);
+                    
+                    // Load posts in batches to avoid overwhelming the browser
+                    const batchSize = 10;
+                    for (let i = 0; i < directories.length; i += batchSize) {
+                        const batch = directories.slice(i, i + batchSize);
+                        
+                        const batchPromises = batch.map(async (dir) => {
+                            try {
+                                return await this.loadPostData(dir);
+                            } catch (error) {
+                                console.warn(`Failed to load data for ${dir}:`, error);
+                                return null;
+                            }
+                        });
+                        
+                        const batchResults = await Promise.all(batchPromises);
+                        const validPosts = batchResults.filter(post => post !== null);
+                        this.posts.push(...validPosts);
+                        
+                        // Update UI with progress
+                        this.updateLoadingProgress(this.posts.length, directories.length);
+                        
+                        // Small delay to prevent UI blocking
+                        if (i + batchSize < directories.length) {
+                            await new Promise(resolve => setTimeout(resolve, 50));
+                        }
+                    }
+
+                    this.posts.sort((a, b) => new Date(b.createdAt * 1000) - new Date(a.createdAt * 1000));
+                    this.filteredPosts = [...this.posts];
+                    
+                    console.log(`✅ Successfully loaded ${this.posts.length} posts`);
+                } catch (error) {
+                    console.error('Failed to load data:', error);
+                    this.showNoData(error.message);
+                }
+            }
+
+            updateLoadingProgress(loaded, total) {
+                const container = document.getElementById('postsContainer');
+                const percentage = Math.round((loaded / total) * 100);
+                container.innerHTML = `
+                    <div class="loading">
+                        <i class="fas fa-spinner"></i>
+                        <p>Loading Facebook posts data...</p>
+                        <p style="font-size: 0.9rem; margin-top: 0.5rem;">${loaded} of ${total} posts loaded (${percentage}%)</p>
+                        <div style="width: 200px; height: 4px; background: #e9ecef; border-radius: 2px; margin: 1rem auto;">
+                            <div style="width: ${percentage}%; height: 100%; background: var(--accent-color); border-radius: 2px; transition: width 0.3s ease;"></div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            async loadPostData(directory) {
+                try {
+                    const [postResponse, commentsResponse] = await Promise.all([
+                        fetch(`Facebook Posts Archive/${directory}/post.json`),
+                        fetch(`Facebook Posts Archive/${directory}/comments.json`)
+                    ]);
+
+                    if (!postResponse.ok || !commentsResponse.ok) {
+                        throw new Error('Failed to fetch data');
+                    }
+
+                    const postData = await postResponse.json();
+                    const commentsData = await commentsResponse.json();
+
+                    return {
+                        ...postData,
+                        comments: commentsData,
+                        directory: directory
+                    };
+                } catch (error) {
+                    console.warn(`Failed to load ${directory}:`, error);
+                    return null;
+                }
+            }
+
+            setupEventListeners() {
+                document.getElementById('titlebarSearchInput').addEventListener('input', (e) => {
+                    this.searchTerm = e.target.value.toLowerCase();
+                    this.filterPosts();
+                });
+
+                document.querySelectorAll('.titlebar-filter-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.titlebar-filter-btn').forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        this.currentFilter = e.target.dataset.filter;
+                        this.filterPosts();
+                    });
+                });
+            }
+
+            filterPosts() {
+                let filtered = [...this.posts];
+
+                // Apply search filter
+                if (this.searchTerm) {
+                    filtered = filtered.filter(post => 
+                        post.content.toLowerCase().includes(this.searchTerm) ||
+                        post.author.name.toLowerCase().includes(this.searchTerm) ||
+                        post.comments.some(comment => 
+                            comment.content.toLowerCase().includes(this.searchTerm) ||
+                            comment.author.name.toLowerCase().includes(this.searchTerm)
+                        )
+                    );
+                }
+
+                // Apply category filter
+                switch (this.currentFilter) {
+                    case 'high-engagement':
+                        filtered = filtered.filter(post => 
+                            (post.reactionsCount + post.commentCount + post.shareCount) > 100
+                        );
+                        break;
+                    case 'recent':
+                        filtered = filtered.sort((a, b) => b.createdAt - a.createdAt);
+                        break;
+                    case 'popular':
+                        filtered = filtered.sort((a, b) => 
+                            (b.reactionsCount + b.commentCount) - (a.reactionsCount + a.commentCount)
+                        ).slice(0, 20);
+                        break;
+                }
+
+                this.filteredPosts = filtered;
+                this.renderPosts();
+            }
+
+            renderStats() {
+                const totalComments = this.posts.reduce((sum, post) => sum + post.commentCount, 0);
+                const totalReactions = this.posts.reduce((sum, post) => sum + post.reactionsCount, 0);
+                const totalShares = this.posts.reduce((sum, post) => sum + post.shareCount, 0);
+                const avgEngagement = this.posts.length > 0 ? 
+                    Math.round((totalReactions + totalComments + totalShares) / this.posts.length) : 0;
+                
+                const uniqueCommenters = new Set();
+                this.posts.forEach(post => {
+                    post.comments.forEach(comment => {
+                        uniqueCommenters.add(comment.author.id);
+                    });
+                });
+
+                document.getElementById('totalPosts').textContent = this.posts.length.toLocaleString();
+                document.getElementById('totalComments').textContent = totalComments.toLocaleString();
+                document.getElementById('totalReactions').textContent = totalReactions.toLocaleString();
+                document.getElementById('totalShares').textContent = totalShares.toLocaleString();
+                document.getElementById('avgEngagement').textContent = avgEngagement.toLocaleString();
+                document.getElementById('uniqueCommenters').textContent = uniqueCommenters.size.toLocaleString();
+            }
+
+            renderPosts() {
+                const container = document.getElementById('postsContainer');
+                
+                if (this.filteredPosts.length === 0) {
+                    container.innerHTML = `
+                        <div class="no-data">
+                            <i class="fas fa-search"></i>
+                            <p>No posts found matching your criteria</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = this.filteredPosts.map(post => this.renderPost(post)).join('');
+            }
+
+            renderPost(post) {
+                const date = new Date(post.createdAt * 1000);
+                const formattedDate = date.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                const truncatedContent = post.content.length > 300 ? 
+                    post.content.substring(0, 300) + '...' : post.content;
+
+                const attachments = this.getAttachments(post);
+                const topComments = post.comments
+                    .sort((a, b) => b.reactionsCount - a.reactionsCount)
+                    .slice(0, 5);
+
+                return `
+                    <div class="post-card" data-post-id="${post.post_id}">
+                        <div class="post-header">
+                            <div class="post-avatar"><img src="avatar.webp" alt="${post.author.name}" onerror="this.style.display='none'; this.parentNode.innerHTML='${post.author.name.split(' ').map(n => n[0]).join('').toUpperCase()}'"></div>
+                            <div class="post-meta">
+                                <div class="post-author">${post.author.name}</div>
+                                <div class="post-date">${formattedDate}</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-text">${this.formatText(truncatedContent)}</div>
+                            ${attachments.length > 0 ? `
+                                <div class="post-attachments">
+                                    ${attachments.map(att => `
+                                        <div class="attachment">
+                                            <img src="${att}" alt="Post attachment" loading="lazy">
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+                        <div class="post-stats">
+                            <div class="stat-item">
+                                <i class="fas fa-heart"></i>
+                                <span>${post.reactionsCount.toLocaleString()}</span>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-comment"></i>
+                                <span>${post.commentCount.toLocaleString()}</span>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-share"></i>
+                                <span>${post.shareCount.toLocaleString()}</span>
+                            </div>
+                        </div>
+                        ${post.comments.length > 0 ? `
+                            <div class="comments-section">
+                                <button class="see-all-button" onclick="window.facebookAnalytics.openSinglePost('${post.post_id}')">
+                                    <i class="fas fa-comment"></i> See Comments (${post.comments.length})
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }
+
+            renderComment(comment, postDirectory) {
+                const date = new Date(comment.createdAt * 1000);
+                const formattedDate = date.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                // Get comment attachments
+                const commentAttachments = this.getCommentAttachments(comment, postDirectory);
+                
+                // Generate avatar color and initials
+                const avatarColor = this.generateAvatarColor(comment.author.name);
+                const initials = this.getUserInitials(comment.author.name);
+
+                return `
+                    <div class="comment">
+                        <div class="comment-header">
+                            <div class="comment-avatar generated" style="background-color: ${avatarColor};">
+                                ${initials}
+                            </div>
+                            <div class="comment-meta">
+                                <div class="comment-author">${comment.author.name}</div>
+                                <div class="comment-date">${formattedDate}</div>
+                            </div>
+                        </div>
+                        <div class="comment-content">${this.formatText(comment.content)}</div>
+                        ${commentAttachments.length > 0 ? `
+                            <div class="comment-attachments" style="margin-left: 2rem; margin-top: 0.5rem;">
+                                <div class="post-attachments">
+                                    ${commentAttachments.map(att => `
+                                        <div class="attachment">
+                                            <img src="${att}" alt="Comment attachment" loading="lazy">
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+                        <div class="comment-stats">
+                            <span><i class="fas fa-heart"></i> ${comment.reactionsCount}</span>
+                            ${comment.subCommentsCount > 0 ? `<span><i class="fas fa-reply"></i> ${comment.subCommentsCount}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+
+
+            getAttachments(post) {
+                const attachments = [];
+                
+                // Check for post attachments from JSON data
+                if (post._attachments && post._attachments.length > 0) {
+                    post._attachments.forEach(filename => {
+                        attachments.push(`Facebook Posts Archive/${post.directory}/attachments/${filename}`);
+                    });
+                }
+                
+                return attachments;
+            }
+
+            getCommentAttachments(comment, postDirectory) {
+                const attachments = [];
+                
+                // Check for comment attachments from JSON data
+                if (comment.localAttachments && comment.localAttachments.length > 0) {
+                    comment.localAttachments.forEach(filename => {
+                        attachments.push(`Facebook Posts Archive/${postDirectory}/commentsAttachments/${filename}`);
+                    });
+                }
+                
+                return attachments;
+            }
+
+            formatText(text) {
+                return text
+                    .replace(/\n/g, '<br>')
+                    .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+            }
+
+            generateAvatarColor(name) {
+                // Array of vibrant, distinct colors for avatars
+                const colors = [
+                    '#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6',
+                    '#1abc9c', '#34495e', '#f1c40f', '#e67e22', '#95a5a6',
+                    '#8e44ad', '#2980b9', '#27ae60', '#d35400', '#7f8c8d',
+                    '#c0392b', '#16a085', '#2c3e50', '#f39800', '#8e44ad',
+                    '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57',
+                    '#ff9ff3', '#54a0ff', '#5f27cd', '#00d2d3', '#ff9f43',
+                    '#10ac84', '#ee5a6f', '#c44569', '#f8b500', '#7bed9f',
+                    '#70a1ff', '#5352ed', '#ff4757', '#2ed573', '#ffa502'
+                ];
+                
+                // Create a more robust hash function
+                let hash = 0;
+                for (let i = 0; i < name.length; i++) {
+                    const char = name.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = Math.imul(hash, 0x9e3779b9);
+                    hash = hash ^ (hash >>> 16);
+                }
+                
+                // Ensure positive number and get color
+                hash = Math.abs(hash);
+                const colorIndex = hash % colors.length;
+                return colors[colorIndex];
+            }
+
+            getUserInitials(name) {
+                const nameParts = name.trim().split(' ');
+                if (nameParts.length >= 2) {
+                    return (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase();
+                } else if (nameParts.length === 1) {
+                    return nameParts[0].substring(0, 2).toUpperCase();
+                }
+                return 'U';
+            }
+
+            showNoData(errorMessage = '') {
+                const container = document.getElementById('postsContainer');
+                container.innerHTML = `
+                    <div class="no-data">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Unable to load Facebook posts data</p>
+                        ${errorMessage ? `<p style="color: #dc3545; font-size: 0.9rem; margin-top: 0.5rem;">${errorMessage}</p>` : ''}
+                        <div style="margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 8px; text-align: left; max-width: 500px; font-size: 0.9rem;">
+                            <strong>Setup Instructions:</strong><br>
+                            1. Open terminal in this directory<br>
+                            2. Run: <code style="background: #e9ecef; padding: 2px 4px; border-radius: 4px;">node data-loader.js</code><br>
+                            3. Refresh this page<br><br>
+                            Make sure you have Node.js installed and the Facebook Posts Archive folder is present.
+                        </div>
+                    </div>
+                `;
+            }
+
+            openSinglePost(postId) {
+                const post = this.posts.find(p => p.post_id === postId);
+                if (!post) return;
+
+                const singlePostView = document.getElementById('singlePostView');
+                const singlePostContent = document.getElementById('singlePostContent');
+                
+                // Render the full post with all comments
+                const fullPostHtml = this.renderFullPost(post);
+                singlePostContent.innerHTML = fullPostHtml;
+                
+                // Show the modal
+                singlePostView.classList.add('show');
+            }
+
+            renderFullPost(post) {
+                const date = new Date(post.createdAt * 1000);
+                const formattedDate = date.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                const truncatedContent = post.content.length > 300 ? 
+                    post.content.substring(0, 300) + '...' : post.content;
+
+                const attachments = this.getAttachments(post);
+                const allComments = post.comments.sort((a, b) => new Date(a.createdAt * 1000) - new Date(b.createdAt * 1000));
+
+                return `
+                    <div class="post-card">
+                        <div class="post-header">
+                            <div class="post-avatar"><img src="avatar.webp" alt="${post.author.name}" onerror="this.style.display='none'; this.parentNode.innerHTML='${post.author.name.split(' ').map(n => n[0]).join('').toUpperCase()}'"></div>
+                            <div class="post-meta">
+                                <div class="post-author">${post.author.name}</div>
+                                <div class="post-date">${formattedDate}</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-text">${this.formatText(post.content)}</div>
+                            ${attachments.length > 0 ? `
+                                <div class="post-attachments">
+                                    ${attachments.map(att => `
+                                        <div class="attachment">
+                                            <img src="${att}" alt="Post attachment" loading="lazy">
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+                        <div class="post-stats">
+                            <div class="stat-item">
+                                <i class="fas fa-heart"></i>
+                                <span>${post.reactionsCount.toLocaleString()}</span>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-comment"></i>
+                                <span>${post.commentCount.toLocaleString()}</span>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-share"></i>
+                                <span>${post.shareCount.toLocaleString()}</span>
+                            </div>
+                        </div>
+                        ${post.comments.length > 0 ? `
+                            <div class="comments-section">
+                                <div class="comments-list">
+                                    ${allComments.map(comment => this.renderComment(comment, post.directory)).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            window.facebookAnalytics = new FacebookAnalytics();
+            
+            // Home button functionality
+            const homeButton = document.getElementById('homeButton');
+            homeButton.addEventListener('click', () => {
+                // Clear search and reset filters
+                document.getElementById('titlebarSearchInput').value = '';
+                document.querySelectorAll('.titlebar-filter-btn').forEach(b => b.classList.remove('active'));
+                document.querySelector('.titlebar-filter-btn[data-filter="all"]').classList.add('active');
+                
+                // Reset the analytics instance
+                window.facebookAnalytics.searchTerm = '';
+                window.facebookAnalytics.currentFilter = 'all';
+                window.facebookAnalytics.filterPosts();
+                
+                // Close any open modals
+                document.getElementById('helpModal').classList.remove('show');
+                document.getElementById('singlePostView').classList.remove('show');
+                
+                // Scroll to top
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+
+            // Help Modal functionality
+            const helpButton = document.getElementById('helpButton');
+            const helpModal = document.getElementById('helpModal');
+            const closeModal = document.getElementById('closeModal');
+            
+            helpButton.addEventListener('click', () => {
+                helpModal.classList.add('show');
+            });
+            
+            closeModal.addEventListener('click', () => {
+                helpModal.classList.remove('show');
+            });
+            
+            // Close help modal when clicking outside
+            helpModal.addEventListener('click', (e) => {
+                if (e.target === helpModal) {
+                    helpModal.classList.remove('show');
+                }
+            });
+            
+            // Single Post Modal functionality
+            const singlePostView = document.getElementById('singlePostView');
+            const closeSinglePost = document.getElementById('closeSinglePost');
+            
+            closeSinglePost.addEventListener('click', () => {
+                singlePostView.classList.remove('show');
+            });
+            
+            // Close single post modal when clicking outside
+            singlePostView.addEventListener('click', (e) => {
+                if (e.target === singlePostView) {
+                    singlePostView.classList.remove('show');
+                }
+            });
+            
+            // Close modals with Escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if (helpModal.classList.contains('show')) {
+                        helpModal.classList.remove('show');
+                    }
+                    if (singlePostView.classList.contains('show')) {
+                        singlePostView.classList.remove('show');
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
