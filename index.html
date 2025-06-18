@@ -737,14 +737,6 @@
             color: var(--text-secondary);
         }
 
-        .comment-stats {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 1rem;
-            margin-top: 0.25rem;
-        }
-
         .comment-replies {
             margin-left: 2rem;
             margin-top: 0.5rem;
@@ -1532,15 +1524,13 @@
                                     </div>
                                 ` : ''}
                             </div>
-                            <div class="comment-stats">
-                                <div class="comment-meta">
-                                    <span>${formattedDate}</span>
-                                    <span><i class="fas fa-heart"></i> ${comment.reactionsCount}</span>
-                                    ${comment.subCommentsCount > 0 ? `<span><i class="fas fa-reply"></i> ${comment.subCommentsCount} ${comment.subCommentsCount === 1 ? 'reply' : 'replies'}</span>` : ''}
-                                </div>
+                            <div class="comment-meta">
                                 <button class="export-comment-btn" onclick="window.facebookAnalytics.exportComment('${comment.id}', '${postDirectory}')">
                                     <i class="fas fa-download"></i> Export
                                 </button>
+                                <span>${formattedDate}</span>
+                                <span><i class="fas fa-heart"></i> ${comment.reactionsCount}</span>
+                                ${comment.subCommentsCount > 0 ? `<span><i class="fas fa-reply"></i> ${comment.subCommentsCount} ${comment.subCommentsCount === 1 ? 'reply' : 'replies'}</span>` : ''}
                             </div>
                             ${childComments ? `
                                 <div class="comment-replies">
