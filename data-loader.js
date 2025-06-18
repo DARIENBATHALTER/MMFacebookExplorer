@@ -1,4 +1,4 @@
-// Data loader for Facebook Posts Archive
+// Data loader for Facebook_Posts_Archive
 // This script generates a manifest of all available posts
 
 const fs = require('fs');
