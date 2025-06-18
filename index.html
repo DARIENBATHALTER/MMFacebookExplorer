@@ -763,19 +763,129 @@
         .export-comment-btn {
             margin-left: 0.5rem;
             padding: 0.2rem 0.4rem;
-            background: none;
-            border: 1px solid var(--border-color);
+            background: rgba(30, 97, 189, 0.1);
+            border: 1px solid var(--accent-color);
             border-radius: 4px;
-            color: var(--text-secondary);
+            color: var(--accent-color);
             cursor: pointer;
             font-size: 0.7rem;
             transition: all 0.3s ease;
         }
 
         .export-comment-btn:hover {
-            background: var(--secondary-color);
-            color: var(--accent-color);
+            background: var(--accent-color);
+            color: white;
             border-color: var(--accent-color);
+        }
+
+        .export-all-btn {
+            padding: 0.5rem 1rem;
+            background: var(--accent-color);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .export-all-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        .export-all-btn:disabled {
+            background: var(--text-secondary);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .export-progress-tooltip {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: var(--shadow-heavy);
+            border: 1px solid var(--border-color);
+            min-width: 300px;
+            z-index: 2000;
+            display: none;
+        }
+
+        .export-progress-tooltip.show {
+            display: block;
+            animation: slideInUp 0.3s ease-out;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .export-progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .export-progress-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .export-progress-close {
+            width: 20px;
+            height: 20px;
+            border: none;
+            background: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .export-progress-close:hover {
+            background: var(--secondary-color);
+        }
+
+        .export-progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--secondary-color);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .export-progress-fill {
+            height: 100%;
+            background: var(--gradient-primary);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .export-progress-text {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-align: center;
         }
 
         .screenshot-render-area {
@@ -1039,6 +1149,20 @@
     <!-- Screenshot render area for exporting comments -->
     <div class="screenshot-render-area" id="screenshotRenderArea"></div>
 
+    <!-- Export progress tooltip -->
+    <div class="export-progress-tooltip" id="exportProgressTooltip">
+        <div class="export-progress-header">
+            <div class="export-progress-title" id="exportProgressTitle">Exporting Comments...</div>
+            <button class="export-progress-close" id="exportProgressClose">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="export-progress-bar">
+            <div class="export-progress-fill" id="exportProgressFill"></div>
+        </div>
+        <div class="export-progress-text" id="exportProgressText">0 / 0 exported</div>
+    </div>
+
     <div class="container">
 
         <div class="stats-grid">
@@ -1072,6 +1196,13 @@
                 <div class="value" id="uniqueCommenters">-</div>
                 <div class="label">Unique Commenters</div>
             </div>
+        </div>
+
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <button class="export-all-btn" id="exportAllPostCommentsBtn">
+                <i class="fas fa-download"></i>
+                Export All Post Comments
+            </button>
         </div>
 
         <div class="posts-container" id="postsContainer">
@@ -1167,8 +1298,8 @@
             async loadPostData(directory) {
                 try {
                     const [postResponse, commentsResponse] = await Promise.all([
-                        fetch(`Facebook Posts Archive/${directory}/post.json`),
-                        fetch(`Facebook Posts Archive/${directory}/comments.json`)
+                        fetch(`Facebook_Posts_Archive/${directory}/post.json`),
+                        fetch(`Facebook_Posts_Archive/${directory}/comments.json`)
                     ]);
 
                     if (!postResponse.ok || !commentsResponse.ok) {
@@ -1420,7 +1551,7 @@
                 // Check for post attachments from JSON data
                 if (post._attachments && post._attachments.length > 0) {
                     post._attachments.forEach(filename => {
-                        attachments.push(`Facebook Posts Archive/${post.directory}/attachments/${filename}`);
+                        attachments.push(`Facebook_Posts_Archive/${post.directory}/attachments/${filename}`);
                     });
                 }
                 
@@ -1433,7 +1564,7 @@
                 // Check for comment attachments from JSON data
                 if (comment.localAttachments && comment.localAttachments.length > 0) {
                     comment.localAttachments.forEach(filename => {
-                        attachments.push(`Facebook Posts Archive/${postDirectory}/commentsAttachments/${filename}`);
+                        attachments.push(`Facebook_Posts_Archive/${postDirectory}/commentsAttachments/${filename}`);
                     });
                 }
                 
@@ -1512,7 +1643,7 @@
                             1. Open terminal in this directory<br>
                             2. Run: <code style="background: #e9ecef; padding: 2px 4px; border-radius: 4px;">node data-loader.js</code><br>
                             3. Refresh this page<br><br>
-                            Make sure you have Node.js installed and the Facebook Posts Archive folder is present.
+                            Make sure you have Node.js installed and the Facebook_Posts_Archive folder is present.
                         </div>
                     </div>
                 `;
@@ -1586,6 +1717,12 @@
                         </div>
                         ${post.comments.length > 0 ? `
                             <div class="comments-section">
+                                <div style="padding: 1rem; text-align: center; border-bottom: 1px solid var(--border-color);">
+                                    <button class="export-all-btn" onclick="window.facebookAnalytics.exportAllCommentsFromPost('${post.post_id}')">
+                                        <i class="fas fa-download"></i>
+                                        Export All Comments
+                                    </button>
+                                </div>
                                 <div class="comments-list">
                                     ${allComments.map(comment => this.renderComment(comment, post.directory)).join('')}
                                 </div>
@@ -1749,6 +1886,175 @@
                 const diffInWeeks = Math.floor(diffInDays / 7);
                 return `${diffInWeeks}w`;
             }
+
+            async exportAllCommentsFromPost(postId) {
+                const post = this.posts.find(p => p.post_id === postId);
+                if (!post || post.comments.length === 0) {
+                    alert('No comments found for this post');
+                    return;
+                }
+
+                const allComments = this.getAllCommentsFlat(post.comments);
+                await this.bulkExportComments(allComments, post.directory, `Post Comments`);
+            }
+
+            async exportAllPostComments() {
+                const allComments = [];
+                const allDirectories = [];
+                
+                for (const post of this.filteredPosts) {
+                    const postComments = this.getAllCommentsFlat(post.comments);
+                    allComments.push(...postComments);
+                    allDirectories.push(...postComments.map(() => post.directory));
+                }
+
+                if (allComments.length === 0) {
+                    alert('No comments found in current posts');
+                    return;
+                }
+
+                await this.bulkExportComments(allComments, allDirectories, 'All Post Comments');
+            }
+
+            getAllCommentsFlat(comments) {
+                const flatComments = [];
+                
+                function flattenComments(commentList) {
+                    for (const comment of commentList) {
+                        flatComments.push(comment);
+                        if (comment.children && comment.children.length > 0) {
+                            flattenComments(comment.children);
+                        }
+                    }
+                }
+                
+                flattenComments(comments);
+                return flatComments;
+            }
+
+            async bulkExportComments(comments, directories, exportName) {
+                if (comments.length === 0) return;
+
+                const progressTooltip = document.getElementById('exportProgressTooltip');
+                const progressTitle = document.getElementById('exportProgressTitle');
+                const progressFill = document.getElementById('exportProgressFill');
+                const progressText = document.getElementById('exportProgressText');
+                const exportAllBtn = document.getElementById('exportAllPostCommentsBtn');
+
+                // Show progress tooltip
+                progressTitle.textContent = `Exporting ${exportName}...`;
+                progressFill.style.width = '0%';
+                progressText.textContent = `0 / ${comments.length} exported`;
+                progressTooltip.classList.add('show');
+
+                // Disable export button
+                if (exportAllBtn) {
+                    exportAllBtn.disabled = true;
+                    exportAllBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exporting...';
+                }
+
+                let successCount = 0;
+                const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+
+                try {
+                    for (let i = 0; i < comments.length; i++) {
+                        const comment = comments[i];
+                        const directory = Array.isArray(directories) ? directories[i] : directories;
+                        
+                        try {
+                            // Create export div
+                            const screenshotRenderArea = document.getElementById('screenshotRenderArea');
+                            screenshotRenderArea.innerHTML = '';
+                            
+                            const exportDiv = this.createFacebookCommentExport(comment, directory);
+                            screenshotRenderArea.appendChild(exportDiv);
+                            
+                            // Wait for images to load
+                            const images = exportDiv.getElementsByTagName('img');
+                            const promises = [];
+                            for (let img of images) {
+                                if (!img.complete) {
+                                    promises.push(new Promise(resolve => { 
+                                        img.onload = resolve; 
+                                        img.onerror = resolve; 
+                                    }));
+                                }
+                            }
+                            await Promise.all(promises);
+                            
+                            // Short delay for rendering
+                            await new Promise(resolve => setTimeout(resolve, 100));
+                            
+                            // Temporarily make visible for screenshot
+                            screenshotRenderArea.style.left = '0px';
+                            screenshotRenderArea.style.top = '0px';
+                            screenshotRenderArea.style.opacity = '0.01';
+                            screenshotRenderArea.style.zIndex = '-1';
+                            
+                            // Take screenshot
+                            const canvas = await html2canvas(exportDiv, {
+                                useCORS: true,
+                                allowTaint: true,
+                                backgroundColor: null,
+                                scale: 2,
+                                logging: false
+                            });
+                            
+                            // Create download link
+                            const imageURL = canvas.toDataURL('image/png');
+                            const sanitizedAuthor = comment.author.name.replace(/[^a-zA-Z0-9_]/g, '') || 'UnknownAuthor';
+                            const commentNumber = String(i + 1).padStart(3, '0');
+                            
+                            const downloadLink = document.createElement('a');
+                            downloadLink.download = `facebook_comment_${commentNumber}_${sanitizedAuthor}_${timestamp}.png`;
+                            downloadLink.href = imageURL;
+                            document.body.appendChild(downloadLink);
+                            downloadLink.click();
+                            document.body.removeChild(downloadLink);
+                            
+                            successCount++;
+                            
+                            // Reset render area
+                            screenshotRenderArea.innerHTML = '';
+                            screenshotRenderArea.style.left = '-9999px';
+                            screenshotRenderArea.style.top = '-9999px';
+                            screenshotRenderArea.style.opacity = '1';
+                            screenshotRenderArea.style.zIndex = 'auto';
+                            
+                        } catch (error) {
+                            console.error(`Error exporting comment ${i + 1}:`, error);
+                        }
+                        
+                        // Update progress
+                        const progress = ((i + 1) / comments.length) * 100;
+                        progressFill.style.width = `${progress}%`;
+                        progressText.textContent = `${successCount} / ${comments.length} exported`;
+                        
+                        // Small delay between exports to prevent overwhelming the browser
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                    }
+                    
+                    // Show completion message
+                    progressTitle.textContent = `Export Complete!`;
+                    progressText.textContent = `${successCount} / ${comments.length} comments exported successfully`;
+                    
+                } catch (error) {
+                    console.error('Bulk export error:', error);
+                    progressTitle.textContent = 'Export Error';
+                    progressText.textContent = `${successCount} / ${comments.length} exported before error`;
+                } finally {
+                    // Re-enable export button
+                    if (exportAllBtn) {
+                        exportAllBtn.disabled = false;
+                        exportAllBtn.innerHTML = '<i class="fas fa-download"></i> Export All Post Comments';
+                    }
+                    
+                    // Auto-hide progress after 3 seconds
+                    setTimeout(() => {
+                        progressTooltip.classList.remove('show');
+                    }, 3000);
+                }
+            }
         }
 
         // Initialize the application
@@ -1811,6 +2117,19 @@
                 }
             });
             
+            // Export progress tooltip functionality
+            const exportProgressTooltip = document.getElementById('exportProgressTooltip');
+            const exportProgressClose = document.getElementById('exportProgressClose');
+            const exportAllPostCommentsBtn = document.getElementById('exportAllPostCommentsBtn');
+            
+            exportProgressClose.addEventListener('click', () => {
+                exportProgressTooltip.classList.remove('show');
+            });
+            
+            exportAllPostCommentsBtn.addEventListener('click', () => {
+                window.facebookAnalytics.exportAllPostComments();
+            });
+            
             // Close modals with Escape key
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
@@ -1819,6 +2138,9 @@
                     }
                     if (singlePostView.classList.contains('show')) {
                         singlePostView.classList.remove('show');
+                    }
+                    if (exportProgressTooltip.classList.contains('show')) {
+                        exportProgressTooltip.classList.remove('show');
                     }
                 }
             });

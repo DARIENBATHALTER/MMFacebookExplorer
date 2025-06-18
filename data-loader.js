@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 
 function generateDataManifest() {
-    const archiveDir = './Facebook Posts Archive';
+    const archiveDir = './Facebook_Posts_Archive';
     const manifestPath = './posts-manifest.json';
     
     try {
