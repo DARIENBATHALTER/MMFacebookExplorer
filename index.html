@@ -1671,6 +1671,14 @@
                 
                 // Show the modal
                 singlePostView.classList.add('show');
+                
+                // Scroll to top of modal content
+                setTimeout(() => {
+                    const singlePostContainer = singlePostView.querySelector('.single-post-container');
+                    if (singlePostContainer) {
+                        singlePostContainer.scrollTop = 0;
+                    }
+                }, 50); // Small delay to ensure modal is fully rendered
             }
 
             renderFullPost(post) {
@@ -2137,12 +2145,26 @@
             
             closeSinglePost.addEventListener('click', () => {
                 singlePostView.classList.remove('show');
+                // Reset scroll position for next time
+                setTimeout(() => {
+                    const singlePostContainer = singlePostView.querySelector('.single-post-container');
+                    if (singlePostContainer) {
+                        singlePostContainer.scrollTop = 0;
+                    }
+                }, 100);
             });
             
             // Close single post modal when clicking outside
             singlePostView.addEventListener('click', (e) => {
                 if (e.target === singlePostView) {
                     singlePostView.classList.remove('show');
+                    // Reset scroll position for next time
+                    setTimeout(() => {
+                        const singlePostContainer = singlePostView.querySelector('.single-post-container');
+                        if (singlePostContainer) {
+                            singlePostContainer.scrollTop = 0;
+                        }
+                    }, 100);
                 }
             });
             
@@ -2167,6 +2189,13 @@
                     }
                     if (singlePostView.classList.contains('show')) {
                         singlePostView.classList.remove('show');
+                        // Reset scroll position for next time
+                        setTimeout(() => {
+                            const singlePostContainer = singlePostView.querySelector('.single-post-container');
+                            if (singlePostContainer) {
+                                singlePostContainer.scrollTop = 0;
+                            }
+                        }, 100);
                     }
                     if (exportProgressTooltip.classList.contains('show')) {
                         exportProgressTooltip.classList.remove('show');
