@@ -730,9 +730,17 @@
             margin-left: 2rem;
             margin-top: 0.5rem;
             display: flex;
+            justify-content: space-between;
+            align-items: center;
             gap: 1rem;
             font-size: 0.7rem;
             color: var(--text-secondary);
+        }
+
+        .comment-stats .stats-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
         }
 
         .comment-replies {
@@ -760,6 +768,7 @@
         .comment.reply .comment-stats {
             margin-left: 1.5rem;
             font-size: 0.65rem;
+            justify-content: space-between;
         }
 
         .export-comment-btn {
@@ -1533,8 +1542,10 @@
                             </div>
                         ` : ''}
                         <div class="comment-stats">
-                            <span><i class="fas fa-heart"></i> ${comment.reactionsCount}</span>
-                            ${comment.subCommentsCount > 0 ? `<span><i class="fas fa-reply"></i> ${comment.subCommentsCount} ${comment.subCommentsCount === 1 ? 'reply' : 'replies'}</span>` : ''}
+                            <div class="stats-left">
+                                <span><i class="fas fa-heart"></i> ${comment.reactionsCount}</span>
+                                ${comment.subCommentsCount > 0 ? `<span><i class="fas fa-reply"></i> ${comment.subCommentsCount} ${comment.subCommentsCount === 1 ? 'reply' : 'replies'}</span>` : ''}
+                            </div>
                             <button class="export-comment-btn" onclick="window.facebookAnalytics.exportComment('${comment.id}', '${postDirectory}')">
                                 <i class="fas fa-download"></i> Export
                             </button>
@@ -1734,7 +1745,7 @@
                         </div>
                         ${post.comments.length > 0 ? `
                             <div class="comments-section">
-                                <div style="padding: 1rem; text-align: center; border-bottom: 1px solid var(--border-color);">
+                                <div style="padding: 1rem; text-align: right; border-bottom: 1px solid var(--border-color);">
                                     <button class="export-all-btn" onclick="window.facebookAnalytics.exportAllCommentsFromPost('${post.post_id}')">
                                         <i class="fas fa-download"></i>
                                         Export All Comments
