@@ -663,32 +663,25 @@
         }
 
         .comment {
-            padding: 0.75rem 1rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .comment:last-child {
-            border-bottom: none;
-        }
-
-        .comment-header {
             display: flex;
-            align-items: center;
-            gap: 0.75rem;
+            align-items: flex-start;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
             margin-bottom: 0.5rem;
         }
 
         .comment-avatar {
-            width: 28px;
-            height: 28px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             font-weight: 600;
-            font-size: 0.7rem;
+            font-size: 0.8rem;
             overflow: hidden;
+            flex-shrink: 0;
         }
 
         .comment-avatar img {
@@ -700,75 +693,83 @@
         .comment-avatar.generated {
             color: white;
             font-weight: 600;
-            font-size: 0.7rem;
+            font-size: 0.8rem;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        .comment-meta {
+        .comment-content-wrapper {
             flex: 1;
+            min-width: 0;
+        }
+
+        .comment-bubble {
+            background: #f0f2f5;
+            border-radius: 16px;
+            padding: 8px 12px;
+            margin-bottom: 4px;
+            position: relative;
+            display: inline-block;
+            max-width: 100%;
         }
 
         .comment-author {
             font-weight: 600;
             font-size: 0.8rem;
-        }
-
-        .comment-date {
-            color: var(--text-secondary);
-            font-size: 0.7rem;
+            color: #050505;
+            margin-bottom: 2px;
         }
 
         .comment-content {
-            margin-left: 2rem;
-            line-height: 1.4;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
+            line-height: 1.33;
+            color: #050505;
+            word-wrap: break-word;
+        }
+
+        .comment-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 2px;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
         }
 
         .comment-stats {
-            margin-left: 2rem;
-            margin-top: 0.5rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
             gap: 1rem;
-            font-size: 0.7rem;
-            color: var(--text-secondary);
+            margin-top: 0.25rem;
         }
 
         .comment-stats .stats-left {
             display: flex;
             align-items: center;
             gap: 1rem;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
         }
 
         .comment-replies {
-            margin-left: 1.5rem;
-            border-left: 2px solid var(--border-color);
-            padding-left: 1rem;
+            margin-left: 2rem;
             margin-top: 0.5rem;
         }
 
         .comment.reply {
-            padding: 0.5rem 0;
+            margin-bottom: 0.25rem;
         }
 
         .comment.reply .comment-avatar {
-            width: 24px;
-            height: 24px;
-            font-size: 0.6rem;
+            width: 28px;
+            height: 28px;
+            font-size: 0.7rem;
         }
 
-        .comment.reply .comment-content {
-            margin-left: 1.5rem;
-            font-size: 0.75rem;
-        }
-
-        .comment.reply .comment-stats {
-            margin-left: 1.5rem;
-            font-size: 0.65rem;
-            justify-content: space-between;
+        .comment.reply .comment-bubble {
+            background: #e4e6ea;
         }
 
         .export-comment-btn {
@@ -1520,46 +1521,48 @@
 
                 return `
                     <div class="comment ${isReply ? 'reply' : ''}">
-                        <div class="comment-header">
-                            <div class="comment-avatar generated" style="background-color: ${avatarColor};">
-                                ${initials}
-                            </div>
-                            <div class="comment-meta">
+                        <div class="comment-avatar generated" style="background-color: ${avatarColor};">
+                            ${initials}
+                        </div>
+                        <div class="comment-content-wrapper">
+                            <div class="comment-bubble">
                                 <div class="comment-author">${comment.author.name}</div>
-                                <div class="comment-date">${formattedDate}</div>
-                            </div>
-                        </div>
-                        <div class="comment-content">${this.formatText(comment.content)}</div>
-                        ${commentAttachments.length > 0 ? `
-                            <div class="comment-attachments" style="margin-left: ${isReply ? '1.5rem' : '2rem'}; margin-top: 0.5rem;">
-                                <div class="post-attachments">
-                                    ${commentAttachments.map(att => `
-                                        <div class="attachment">
-                                            <img src="${att}" alt="Comment attachment" loading="lazy">
+                                <div class="comment-content">${this.formatText(comment.content)}</div>
+                                ${commentAttachments.length > 0 ? `
+                                    <div class="comment-attachments" style="margin-top: 0.5rem;">
+                                        <div class="post-attachments">
+                                            ${commentAttachments.map(att => `
+                                                <div class="attachment">
+                                                    <img src="${att}" alt="Comment attachment" loading="lazy" style="border-radius: 8px; max-width: 100%;">
+                                                </div>
+                                            `).join('')}
                                         </div>
-                                    `).join('')}
-                                </div>
-                            </div>
-                        ` : ''}
-                        <div class="comment-stats">
-                            <div class="stats-left">
-                                <span><i class="fas fa-heart"></i> ${comment.reactionsCount}</span>
-                                ${comment.subCommentsCount > 0 ? `<span><i class="fas fa-reply"></i> ${comment.subCommentsCount} ${comment.subCommentsCount === 1 ? 'reply' : 'replies'}</span>` : ''}
-                            </div>
-                            <button class="export-comment-btn" onclick="window.facebookAnalytics.exportComment('${comment.id}', '${postDirectory}')">
-                                <i class="fas fa-download"></i> Export
-                            </button>
-                        </div>
-                        ${childComments ? `
-                            <div class="comment-replies">
-                                ${childComments}
-                                ${missingReplies ? `
-                                    <div style="padding: 0.5rem 0; color: var(--text-secondary); font-size: 0.75rem; font-style: italic;">
-                                        ${missingCount} more ${missingCount === 1 ? 'reply' : 'replies'} not shown...
                                     </div>
                                 ` : ''}
                             </div>
-                        ` : ''}
+                            <div class="comment-meta">
+                                <span>${formattedDate}</span>
+                            </div>
+                            <div class="comment-stats">
+                                <div class="stats-left">
+                                    <span><i class="fas fa-heart"></i> ${comment.reactionsCount}</span>
+                                    ${comment.subCommentsCount > 0 ? `<span><i class="fas fa-reply"></i> ${comment.subCommentsCount} ${comment.subCommentsCount === 1 ? 'reply' : 'replies'}</span>` : ''}
+                                </div>
+                                <button class="export-comment-btn" onclick="window.facebookAnalytics.exportComment('${comment.id}', '${postDirectory}')">
+                                    <i class="fas fa-download"></i> Export
+                                </button>
+                            </div>
+                            ${childComments ? `
+                                <div class="comment-replies">
+                                    ${childComments}
+                                    ${missingReplies ? `
+                                        <div style="padding: 0.5rem 0; color: var(--text-secondary); font-size: 0.75rem; font-style: italic;">
+                                            ${missingCount} more ${missingCount === 1 ? 'reply' : 'replies'} not shown...
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            ` : ''}
+                        </div>
                     </div>
                 `;
             }
