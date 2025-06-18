@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -805,6 +806,13 @@
             transform: none;
         }
 
+        .export-button-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 1.5rem;
+            padding: 0 1rem;
+        }
+
         .export-progress-tooltip {
             position: fixed;
             bottom: 20px;
@@ -1166,6 +1174,13 @@
 
     <div class="container">
 
+        <div class="export-button-container">
+            <button class="export-all-btn" id="exportAllPostCommentsBtn">
+                <i class="fas fa-download"></i>
+                Export All Post Comments
+            </button>
+        </div>
+
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="icon"><i class="fas fa-file-alt"></i></div>
@@ -1197,13 +1212,6 @@
                 <div class="value" id="uniqueCommenters">-</div>
                 <div class="label">Unique Commenters</div>
             </div>
-        </div>
-
-        <div style="text-align: center; margin-bottom: 2rem;">
-            <button class="export-all-btn" id="exportAllPostCommentsBtn">
-                <i class="fas fa-download"></i>
-                Export All Post Comments
-            </button>
         </div>
 
         <div class="posts-container" id="postsContainer">
@@ -1943,19 +1951,20 @@
                 const exportAllBtn = document.getElementById('exportAllPostCommentsBtn');
 
                 // Show progress tooltip
-                progressTitle.textContent = `Exporting ${exportName}...`;
+                progressTitle.textContent = `Creating ZIP: ${exportName}...`;
                 progressFill.style.width = '0%';
-                progressText.textContent = `0 / ${comments.length} exported`;
+                progressText.textContent = `0 / ${comments.length} processed`;
                 progressTooltip.classList.add('show');
 
                 // Disable export button
                 if (exportAllBtn) {
                     exportAllBtn.disabled = true;
-                    exportAllBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exporting...';
+                    exportAllBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating ZIP...';
                 }
 
                 let successCount = 0;
                 const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+                const zip = new JSZip();
 
                 try {
                     for (let i = 0; i < comments.length; i++) {
@@ -2001,17 +2010,15 @@
                                 logging: false
                             });
                             
-                            // Create download link
-                            const imageURL = canvas.toDataURL('image/png');
+                            // Convert canvas to blob and add to ZIP
+                            const imageDataURL = canvas.toDataURL('image/png');
+                            const base64Data = imageDataURL.split(',')[1];
                             const sanitizedAuthor = comment.author.name.replace(/[^a-zA-Z0-9_]/g, '') || 'UnknownAuthor';
                             const commentNumber = String(i + 1).padStart(3, '0');
+                            const filename = `facebook_comment_${commentNumber}_${sanitizedAuthor}.png`;
                             
-                            const downloadLink = document.createElement('a');
-                            downloadLink.download = `facebook_comment_${commentNumber}_${sanitizedAuthor}_${timestamp}.png`;
-                            downloadLink.href = imageURL;
-                            document.body.appendChild(downloadLink);
-                            downloadLink.click();
-                            document.body.removeChild(downloadLink);
+                            // Add to ZIP
+                            zip.file(filename, base64Data, { base64: true });
                             
                             successCount++;
                             
@@ -2029,20 +2036,41 @@
                         // Update progress
                         const progress = ((i + 1) / comments.length) * 100;
                         progressFill.style.width = `${progress}%`;
-                        progressText.textContent = `${successCount} / ${comments.length} exported`;
+                        progressText.textContent = `${successCount} / ${comments.length} processed`;
                         
                         // Small delay between exports to prevent overwhelming the browser
                         await new Promise(resolve => setTimeout(resolve, 50));
                     }
                     
+                    // Generate and download ZIP file
+                    progressTitle.textContent = `Finalizing ZIP file...`;
+                    progressText.textContent = `Creating ZIP with ${successCount} images...`;
+                    
+                    const zipBlob = await zip.generateAsync({ 
+                        type: 'blob',
+                        compression: 'DEFLATE',
+                        compressionOptions: { level: 6 }
+                    });
+                    
+                    // Create download link for ZIP
+                    const downloadLink = document.createElement('a');
+                    downloadLink.download = `${exportName.replace(/\s+/g, '_')}_${timestamp}.zip`;
+                    downloadLink.href = URL.createObjectURL(zipBlob);
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                    
+                    // Clean up object URL
+                    URL.revokeObjectURL(downloadLink.href);
+                    
                     // Show completion message
-                    progressTitle.textContent = `Export Complete!`;
-                    progressText.textContent = `${successCount} / ${comments.length} comments exported successfully`;
+                    progressTitle.textContent = `ZIP Export Complete!`;
+                    progressText.textContent = `${successCount} comments exported in ZIP file`;
                     
                 } catch (error) {
                     console.error('Bulk export error:', error);
                     progressTitle.textContent = 'Export Error';
-                    progressText.textContent = `${successCount} / ${comments.length} exported before error`;
+                    progressText.textContent = `${successCount} / ${comments.length} processed before error`;
                 } finally {
                     // Re-enable export button
                     if (exportAllBtn) {
@@ -2050,10 +2078,10 @@
                         exportAllBtn.innerHTML = '<i class="fas fa-download"></i> Export All Post Comments';
                     }
                     
-                    // Auto-hide progress after 3 seconds
+                    // Auto-hide progress after 4 seconds (longer for ZIP completion message)
                     setTimeout(() => {
                         progressTooltip.classList.remove('show');
-                    }, 3000);
+                    }, 4000);
                 }
             }
         }
